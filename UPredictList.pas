@@ -19,20 +19,20 @@ type
     nInsSeq: Integer;
     isPredictive: Boolean;
   end;
-  zPredictItems  = TList<TPredictItem>;
+  TzPredictItems  = TList<TPredictItem>;
 
   TManagedItem = record
     sManagedTxt: string;
   end;
-  zManagedItems  = TList<TManagedItem>;
+  TzManagedItems  = TList<TManagedItem>;
 
   TPredictList = class
     private
-      FzOrgItems      : zPredictItems;
-      FzPredicted     : zPredictItems;
-      FzFullSyllables : zManagedItems;
-      FzFirstSyllables: zManagedItems;
-      FzEngSyllables  : zManagedItems;
+      FzOrgItems      : TzPredictItems;
+      FzPredicted     : TzPredictItems;
+      FzFullSyllables : TzManagedItems;
+      FzFirstSyllables: TzManagedItems;
+      FzEngSyllables  : TzManagedItems;
 
       FsSearchTxt: string;
       FOnPredictChange: TNotifyEvent;
@@ -54,7 +54,8 @@ type
       procedure clear;
 
       property sSearchTxt: string read FsSearchTxt write setSearchTxt;
-      property zPredicted: zPredictItems read FzPredicted write FzPredicted;
+      property zPredicted: TzPredictItems read FzPredicted write FzPredicted;
+      property zOrgItems : TzPredictItems read FzOrgItems  write FzOrgItems;
 
       property count: Integer read getCount;
       property OnPredictChange : TNotifyEvent read FOnPredictChange write FOnPredictChange;
@@ -117,7 +118,7 @@ constructor TPredictList.Create;
 var
   Comparison: TComparison<TPredictItem>;
 begin
-  FzOrgItems      := zPredictItems.Create;
+  FzOrgItems      := TzPredictItems.Create;
 
   Comparison :=
     // TList sort routine
@@ -140,11 +141,11 @@ begin
       else
         Result := -1;
     end;
-  FzPredicted     := zPredictItems.Create(TComparer<TPredictItem>.Construct(Comparison));
+  FzPredicted     := TzPredictItems.Create(TComparer<TPredictItem>.Construct(Comparison));
 
-  FzFullSyllables := zManagedItems.Create;
-  FzFirstSyllables:= zManagedItems.Create;
-  FzEngSyllables  := zManagedItems.Create;
+  FzFullSyllables := TzManagedItems.Create;
+  FzFirstSyllables:= TzManagedItems.Create;
+  FzEngSyllables  := TzManagedItems.Create;
 
   FsSearchTxt:= '';
 end;
@@ -229,22 +230,21 @@ begin
     end;
   end;
 
-  sManagedTxt:= TSyllable.getFirstSyllables(FsSearchTxt);
-  if sManagedTxt = FsSearchTxt then
+  //sManagedTxt:= TSyllable.getFirstSyllables(FsSearchTxt);
+  //초성검색도 입력값 모두와 비교한다.
+  //sManagedTxt:= TSyllable.SplitJaMo(FsSearchTxt);
+  for i:= 0 to nMax - 1 do
   begin
-    for i:= 0 to nMax - 1 do
+    findItem:= FzFirstSyllables[i];
+    if ContainsText(findItem.sManagedTxt, sManagedTxt) then
     begin
-      findItem:= FzFirstSyllables[i];
-      if ContainsText(findItem.sManagedTxt, sManagedTxt) then
+      addItem:= FzOrgItems[i];
+      if not addItem.isPredictive then
       begin
-        addItem:= FzOrgItems[i];
-        if not addItem.isPredictive then
-        begin
-          addItem.isPredictive:= True;
-          FzOrgItems[i]:= addItem;
+        addItem.isPredictive:= True;
+        FzOrgItems[i]:= addItem;
 
-          FzPredicted.Add(addItem);
-        end;
+        FzPredicted.Add(addItem);
       end;
     end;
   end;
